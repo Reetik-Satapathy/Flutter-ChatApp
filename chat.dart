@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
  
 class Chat extends StatefulWidget {
   const Chat({super.key});
@@ -9,11 +11,23 @@ class Chat extends StatefulWidget {
  
 class _ChatState extends State<Chat> {
   final TextEditingController controller = TextEditingController();
-  final List<Map<String, String>> responses = [
-    {"msg": "hi", "response": "How are you?"},
-    {"msg": "hi", "response": "How are you?"},
-    {"msg": "hi", "response": "How are you?"},
-  ];
+  final List<Map<String, String>> responses = [];
+ 
+  void sendMessage() async {
+    Uri url = Uri.parse("https://sugoi-api.vercel.app/chat?msg=" + controller.text);
+ 
+    http.Response response = await http.get(url);
+    dynamic data = json.decode(response.body);
+ 
+    setState(() {
+      responses.add({
+        "msg": data["msg"],
+        "response": data["response"]
+      });
+    });
+ 
+    controller.clear();
+  }
  
   @override
   Widget build(BuildContext context) {
@@ -24,7 +38,11 @@ class _ChatState extends State<Chat> {
         centerTitle: true,
         actions: [
           IconButton(
-              onPressed: () {},
+              onPressed: () {
+                setState(() {
+                  responses.clear();
+                });
+              },
               icon: Icon(
                 Icons.delete,
                 color: Colors.white,
@@ -44,7 +62,9 @@ class _ChatState extends State<Chat> {
                   itemBuilder: (context, index) {
                     return Column(
                       children: [
-                        SizedBox(height: 10,),
+                        SizedBox(
+                          height: 10,
+                        ),
                         Padding(
                           padding: EdgeInsets.only(left: 80),
                           child: ListTile(
@@ -52,7 +72,7 @@ class _ChatState extends State<Chat> {
                               responses[index]["msg"]!,
                               textAlign: TextAlign.right,
                             ),
-                            tileColor: Colors.blueAccent[100],
+                            tileColor: Color.fromRGBO(255, 255, 255, 0.4),
                             trailing: Icon(Icons.person),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.only(
@@ -110,7 +130,7 @@ class _ChatState extends State<Chat> {
                       color: Colors.blue,
                       borderRadius: BorderRadius.circular(32)),
                   child: IconButton(
-                    onPressed: () {},
+                    onPressed: sendMessage,
                     icon: Icon(
                       Icons.send,
                       size: 28,
